@@ -13,7 +13,7 @@
         <span class="hero-outline">EXPLORER</span>
     </h1>
     <p class="hero-subtitle">
-        Decode a VIN and surface likely parts categories and service areas relevant to commercial vehicles and fleet service workflows.
+        Decode a VIN and surface likely parts categories and service areas relevant to commercial vehicles and fleet workflows.
     </p>
 </section>
 
@@ -40,7 +40,9 @@
                 <input class="form-control vin-input modern-vin-input"
                        @bind="VinInput"
                        maxlength="17"
-                       placeholder="1FTFW1ET1EFA12345" />
+                       placeholder="1FTFW1ET1EFA12345"
+                       autocapitalize="characters"
+                       autocomplete="off" />
 
                 <button type="button" class="vin-quickfill-btn" @onclick="UseSampleVin">
                     Use sample
@@ -48,14 +50,14 @@
             </div>
 
             <div class="vin-meta">
-                <span class="vin-meta-text">Uppercase letters and numbers only</span>
-                <span class="vin-meta-divider">•</span>
                 <span class="vin-meta-text">17 characters required</span>
+                <span class="vin-meta-divider">•</span>
+                <span class="vin-meta-text">Letters and numbers only</span>
             </div>
         </div>
 
-        <div class="row g-3 align-items-center mt-1">
-            <div class="col-lg-8">
+        <div class="lookup-actions">
+            <div class="lookup-feedback">
                 @if (!string.IsNullOrWhiteSpace(ErrorMessage))
                 {
                     <div class="alert alert-danger mb-0">@ErrorMessage</div>
@@ -69,19 +71,17 @@
                 }
             </div>
 
-            <div class="col-lg-4">
-                <button class="btn decode-btn modern-decode-btn w-100" @onclick="SearchAsync" disabled="@IsLoading">
-                    @if (IsLoading)
-                    {
-                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                        <span>Decoding...</span>
-                    }
-                    else
-                    {
-                        <span>Decode VIN</span>
-                    }
-                </button>
-            </div>
+            <button class="btn decode-btn modern-decode-btn" @onclick="SearchAsync" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                    <span>Decoding...</span>
+                }
+                else
+                {
+                    <span>Decode VIN</span>
+                }
+            </button>
         </div>
     </div>
 </section>
@@ -92,7 +92,7 @@
         <div class="empty-icon">🚛</div>
         <h3>Ready to decode a vehicle</h3>
         <p>
-            Enter a VIN above to view decoded vehicle details and suggested Inland-relevant parts and service categories.
+            Enter a VIN above to view decoded vehicle details and Inland-relevant parts and service recommendations.
         </p>
     </section>
 }
@@ -170,16 +170,22 @@
                             <div class="suggestion-item">
                                 <div class="suggestion-top">
                                     <div class="suggestion-title">@item.Category</div>
-                                    <div class="relevance-badge relevance-@item.Relevance.ToLowerInvariant()">
-                                        @item.Relevance
-                                    </div>
+                                    @if (!string.IsNullOrWhiteSpace(item.Relevance))
+                                    {
+                                        <div class="relevance-badge relevance-@item.Relevance.ToLowerInvariant()">
+                                            @item.Relevance
+                                        </div>
+                                    }
                                 </div>
 
                                 <div class="suggestion-section-label">Why this applies</div>
                                 <div class="suggestion-text">@item.Reason</div>
 
-                                <div class="suggestion-section-label mt-3">Inland match</div>
-                                <div class="suggestion-text">@item.InlandMatch</div>
+                                @if (!string.IsNullOrWhiteSpace(item.InlandMatch))
+                                {
+                                    <div class="suggestion-section-label mt-3">Inland match</div>
+                                    <div class="suggestion-text">@item.InlandMatch</div>
+                                }
                             </div>
                         }
                     </div>
@@ -190,7 +196,7 @@
                             <div class="info-stat-label">Categories</div>
                         </div>
                         <div class="info-stat">
-                            <div class="info-stat-num">@DisplayValue(Vehicle.VehicleType)</div>
+                            <div class="info-stat-num small-stat">@DisplayValue(Vehicle.VehicleType)</div>
                             <div class="info-stat-label">Vehicle Type</div>
                         </div>
                     </div>
@@ -260,10 +266,5 @@
         return string.IsNullOrWhiteSpace(value) || value == "Unknown"
             ? "Not available from public VIN data"
             : value;
-    }
-
-    private int GetSuggestionNumber(PartSuggestion item)
-    {
-        return Suggestions.IndexOf(item) + 1;
     }
 }
