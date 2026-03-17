@@ -1,0 +1,61 @@
+﻿@using TruckPartsInventoryExplorer.Models
+
+<div class="card shadow-sm p-4 mb-4">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-8">
+            <label class="form-label">Vehicle VIN</label>
+            <input class="form-control"
+                   @bind="Vin"
+                   maxlength="17"
+                   placeholder="Enter 17-character VIN" />
+        </div>
+
+        <div class="col-md-4">
+            <button class="btn btn-primary w-100" @onclick="HandleSearch" disabled="@IsLoading">
+                @if (IsLoading)
+                {
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    
+                }
+                else
+                {
+                    <span>Decode VIN</span>
+                }
+            </button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="alert alert-danger mt-3">@ErrorMessage</div>
+    }
+</div>
+
+@code {
+    private string Vin { get; set; } = string.Empty;
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnSearch { get; set; }
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    private async Task HandleSearch()
+    {
+        ErrorMessage = string.Empty;
+
+        var vin = (Vin ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (vin.Length != 17)
+        {
+            ErrorMessage = "Please enter a valid 17-character VIN.";
+            return;
+        }
+
+        if (OnSearch.HasDelegate)
+        {
+            await OnSearch.InvokeAsync(vin);
+        }
+    }
+}

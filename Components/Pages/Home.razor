@@ -1,0 +1,269 @@
+﻿@page "/"
+@using TruckPartsInventoryExplorer.Models
+@using TruckPartsInventoryExplorer.Services
+@inject VehicleDecoderService DecoderService
+@inject PartsSuggestionService SuggestionService
+
+<PageTitle>Truck Parts Inventory Explorer</PageTitle>
+
+<section class="hero-panel">
+    <div class="eyebrow">commercial vehicle parts intelligence</div>
+    <h1 class="hero-title">
+        TRUCK PARTS<br />
+        <span class="hero-outline">EXPLORER</span>
+    </h1>
+    <p class="hero-subtitle">
+        Decode a VIN and surface likely parts categories and service areas relevant to commercial vehicles and fleet service workflows.
+    </p>
+</section>
+
+<div class="section-divider"></div>
+
+<section class="lookup-panel">
+    <div class="panel-label">— VIN Lookup</div>
+
+    <div class="lookup-card modern-lookup-card">
+        <div class="lookup-topbar">
+            <div>
+                <div class="lookup-kicker">Decode vehicle identity</div>
+                <h3 class="lookup-title">Enter a 17-character VIN</h3>
+            </div>
+            <div class="vin-chip">Public NHTSA API</div>
+        </div>
+
+        <div class="vin-shell">
+            <label class="vin-label">Vehicle VIN</label>
+
+            <div class="vin-input-wrap">
+                <div class="vin-icon">#</div>
+
+                <input class="form-control vin-input modern-vin-input"
+                       @bind="VinInput"
+                       maxlength="17"
+                       placeholder="1FTFW1ET1EFA12345" />
+
+                <button type="button" class="vin-quickfill-btn" @onclick="UseSampleVin">
+                    Use sample
+                </button>
+            </div>
+
+            <div class="vin-meta">
+                <span class="vin-meta-text">Uppercase letters and numbers only</span>
+                <span class="vin-meta-divider">•</span>
+                <span class="vin-meta-text">17 characters required</span>
+            </div>
+        </div>
+
+        <div class="row g-3 align-items-center mt-1">
+            <div class="col-lg-8">
+                @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+                {
+                    <div class="alert alert-danger mb-0">@ErrorMessage</div>
+                }
+                else
+                {
+                    <div class="lookup-helper">
+                        Try sample VIN:
+                        <button type="button" class="sample-link" @onclick="UseSampleVin">1FTFW1ET1EFA12345</button>
+                    </div>
+                }
+            </div>
+
+            <div class="col-lg-4">
+                <button class="btn decode-btn modern-decode-btn w-100" @onclick="SearchAsync" disabled="@IsLoading">
+                    @if (IsLoading)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Decoding...</span>
+                    }
+                    else
+                    {
+                        <span>Decode VIN</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+@if (Vehicle is null && string.IsNullOrWhiteSpace(ErrorMessage))
+{
+    <section class="empty-panel">
+        <div class="empty-icon">🚛</div>
+        <h3>Ready to decode a vehicle</h3>
+        <p>
+            Enter a VIN above to view decoded vehicle details and suggested Inland-relevant parts and service categories.
+        </p>
+    </section>
+}
+
+@if (Vehicle is not null)
+{
+    <section class="results-section">
+        <div class="results-grid">
+            <div class="results-column">
+                <div class="panel-card details-card">
+                    <div class="panel-header dark-header">
+                        <span class="panel-header-label">01</span>
+                        <h3>Decoded Vehicle Details</h3>
+                    </div>
+
+                    <div class="details-list">
+                        <div class="detail-row">
+                            <span class="detail-name">VIN</span>
+                            <span class="detail-value">@Vehicle.Vin</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Make</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.Make)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Model</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.Model)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Model Year</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.ModelYear)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Vehicle Type</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.VehicleType)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Body Class</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.BodyClass)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Drive Type</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.DriveType)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Engine Configuration</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.EngineConfiguration)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Engine Cylinders</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.EngineCylinders)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">Brake System Type</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.BrakeSystemType)</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-name">GVWR</span>
+                            <span class="detail-value">@DisplayValue(Vehicle.GVWR)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="results-column">
+                <div class="panel-card suggestions-card">
+                    <div class="panel-header orange-header">
+                        <span class="panel-header-label">02</span>
+                        <h3>Suggested Parts & Services</h3>
+                    </div>
+
+                    <div class="suggestions-grid">
+                        @foreach (var item in Suggestions)
+                        {
+                            <div class="suggestion-item">
+                                <div class="suggestion-top">
+                                    <div class="suggestion-title">@item.Category</div>
+                                    <div class="relevance-badge relevance-@item.Relevance.ToLowerInvariant()">
+                                        @item.Relevance
+                                    </div>
+                                </div>
+
+                                <div class="suggestion-section-label">Why this applies</div>
+                                <div class="suggestion-text">@item.Reason</div>
+
+                                <div class="suggestion-section-label mt-3">Inland match</div>
+                                <div class="suggestion-text">@item.InlandMatch</div>
+                            </div>
+                        }
+                    </div>
+
+                    <div class="info-strip">
+                        <div class="info-stat">
+                            <div class="info-stat-num">@Suggestions.Count</div>
+                            <div class="info-stat-label">Categories</div>
+                        </div>
+                        <div class="info-stat">
+                            <div class="info-stat-num">@DisplayValue(Vehicle.VehicleType)</div>
+                            <div class="info-stat-label">Vehicle Type</div>
+                        </div>
+                    </div>
+
+                    <div class="results-note">
+                        Suggestions are inferred from public VIN decoding data and mapped to commercial vehicle parts/service relevance for demo purposes.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    private string VinInput { get; set; } = string.Empty;
+    private VehicleInfo? Vehicle { get; set; }
+    private List<PartSuggestion> Suggestions { get; set; } = new();
+    private bool IsLoading { get; set; }
+    private string ErrorMessage { get; set; } = string.Empty;
+
+    private async Task SearchAsync()
+    {
+        ErrorMessage = string.Empty;
+        Vehicle = null;
+        Suggestions.Clear();
+
+        var vin = (VinInput ?? string.Empty).Trim().ToUpperInvariant();
+
+        if (vin.Length != 17)
+        {
+            ErrorMessage = "Please enter a valid 17-character VIN.";
+            return;
+        }
+
+        try
+        {
+            IsLoading = true;
+
+            var result = await DecoderService.DecodeVinAsync(vin);
+
+            if (result is null)
+            {
+                ErrorMessage = "No vehicle information could be found for that VIN.";
+                return;
+            }
+
+            Vehicle = result;
+            Suggestions = SuggestionService.GetSuggestions(result);
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private void UseSampleVin()
+    {
+        VinInput = "1FTFW1ET1EFA12345";
+    }
+
+    private static string DisplayValue(string? value)
+    {
+        return string.IsNullOrWhiteSpace(value) || value == "Unknown"
+            ? "Not available from public VIN data"
+            : value;
+    }
+
+    private int GetSuggestionNumber(PartSuggestion item)
+    {
+        return Suggestions.IndexOf(item) + 1;
+    }
+}

@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "/Jw5ND+7mTE=",
+  "success": true,
+  "projectFilePath": "C:\\aaa-InlandtruckMiniProj\\TruckPartsInventoryExplorer\\TruckPartsInventoryExplorer.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\omkar\\.nuget\\packages\\microsoft.aspnetcore.app.internal.assets\\10.0.5\\microsoft.aspnetcore.app.internal.assets.10.0.5.nupkg.sha512"
+  ],
+  "logs": []
+}
