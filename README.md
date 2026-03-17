@@ -1,3 +1,5 @@
+## Checkout Live Deployment on Link :- https://inlandtruckminiprojectdemo.onrender.com/
+
 # 🚛 Truck Parts Inventory Explorer
 
 A Blazor Web App built with **.NET 10** that decodes a vehicle VIN using the **NHTSA vPIC public API** and translates it into **Inland Truck Parts–relevant parts categories and service recommendations**.
